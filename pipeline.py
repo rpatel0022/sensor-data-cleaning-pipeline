@@ -94,15 +94,22 @@ def handle_missing_values(df):
         }
 
         if pct < 5:
-            # Small gaps: linear interpolation (best for continuous sensor data)
+            # Linear interpolation: best for small gaps in continuous sensor readings
+            # because power consumption changes smoothly minute-to-minute.
+            # limit=10 prevents interpolating across long outages where the
+            # true values are unknowable.
             df[col] = df[col].interpolate(method="linear", limit=10)
             missing_report[col]["method"] = "linear_interpolation"
         elif pct < 20:
-            # Medium gaps: forward fill then backward fill
+            # Forward-fill then back-fill for medium gaps: assumes the sensor
+            # reading stays roughly constant over short periods (reasonable for
+            # power data where appliances run in steady state).
             df[col] = df[col].ffill(limit=30).bfill(limit=30)
             missing_report[col]["method"] = "forward_backward_fill"
         else:
-            # Large gaps: flag but don't impute (data may be unreliable)
+            # Large gaps: flag but don't impute — inventing data for >20% of
+            # readings would be misleading. Better to let downstream analysis
+            # decide how to handle these.
             df[f"{col}_missing_flag"] = df[col].isna().astype(int)
             missing_report[col]["method"] = "flagged_only"
 
@@ -162,7 +169,16 @@ def standardize_units(df):
 # Step 4: Anomaly Detection
 # ---------------------------------------------------------------------------
 def detect_anomalies(df, numeric_cols=None):
-    """Detect anomalies using IQR and rolling z-score methods."""
+    """Detect anomalies using IQR and rolling z-score methods.
+
+    Two complementary approaches:
+    - IQR (3x multiplier): catches global outliers. Using 3x instead of the
+      standard 1.5x because sensor data has natural spikes (e.g. oven turning on)
+      that aren't errors — 1.5x would flag too much normal usage.
+    - Rolling z-score (window=60, threshold=3): catches sudden local deviations.
+      60-minute window captures hourly patterns without being thrown off by
+      day/night cycles. Threshold of 3 = ~0.3% false positive rate.
+    """
     if numeric_cols is None:
         numeric_cols = df.select_dtypes(include=[np.number]).columns.tolist()
 
