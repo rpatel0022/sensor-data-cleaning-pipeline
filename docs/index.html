@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Industrial Sensor Data Cleaning Pipeline</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background: #0f172a; color: #e2e8f0; line-height: 1.6; }
+        .hero { background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); border-bottom: 1px solid #334155; padding: 3rem 2rem; text-align: center; }
+        .hero h1 { font-size: 2.2rem; font-weight: 700; color: #f8fafc; margin-bottom: 0.5rem; }
+        .hero .subtitle { font-size: 1.1rem; color: #94a3b8; max-width: 700px; margin: 0 auto; }
+        .hero .domain-tag { display: inline-block; margin-top: 1rem; background: #f59e0b20; border: 1px solid #f59e0b40; color: #fbbf24; padding: 0.4rem 1rem; border-radius: 20px; font-size: 0.85rem; font-weight: 500; }
+        .container { max-width: 1100px; margin: 0 auto; padding: 2rem; }
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1.2rem; margin: 2rem 0; }
+        .stat-card { background: #1e293b; border: 1px solid #334155; border-radius: 12px; padding: 1.5rem; text-align: center; }
+        .stat-card .number { font-size: 1.8rem; font-weight: 700; }
+        .stat-card .number.green { color: #4ade80; }
+        .stat-card .number.blue { color: #38bdf8; }
+        .stat-card .number.amber { color: #fbbf24; }
+        .stat-card .number.red { color: #f87171; }
+        .stat-card .number.purple { color: #a78bfa; }
+        .stat-card .label { font-size: 0.85rem; color: #94a3b8; margin-top: 0.3rem; }
+        .section { margin: 2.5rem 0; }
+        .section h2 { font-size: 1.4rem; font-weight: 600; color: #f8fafc; margin-bottom: 1rem; padding-bottom: 0.5rem; border-bottom: 2px solid #fbbf24; display: inline-block; }
+        .pipeline-flow { display: flex; gap: 0; margin-top: 1.5rem; overflow-x: auto; padding-bottom: 1rem; }
+        .flow-step { background: #1e293b; border: 1px solid #334155; border-radius: 12px; padding: 1.2rem; min-width: 180px; text-align: center; position: relative; flex-shrink: 0; }
+        .flow-step::after { content: '\2192'; position: absolute; right: -18px; top: 50%; transform: translateY(-50%); color: #fbbf24; font-size: 1.5rem; z-index: 1; }
+        .flow-step:last-child::after { display: none; }
+        .flow-step .icon { font-size: 1.8rem; margin-bottom: 0.5rem; }
+        .flow-step h3 { font-size: 0.85rem; color: #f8fafc; margin-bottom: 0.3rem; }
+        .flow-step p { font-size: 0.75rem; color: #94a3b8; }
+        .viz-section { margin: 2rem 0; }
+        .viz-card { background: #1e293b; border: 1px solid #334155; border-radius: 12px; overflow: hidden; margin-bottom: 1.5rem; }
+        .viz-card .viz-header { padding: 1rem 1.5rem; border-bottom: 1px solid #334155; }
+        .viz-card .viz-header h3 { font-size: 1rem; color: #f8fafc; }
+        .viz-card .viz-header p { font-size: 0.85rem; color: #94a3b8; }
+        .viz-card img { width: 100%; display: block; }
+        .anomaly-table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
+        .anomaly-table th { background: #1e293b; color: #fbbf24; text-align: left; padding: 0.8rem 1rem; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em; }
+        .anomaly-table td { padding: 0.7rem 1rem; border-bottom: 1px solid #1e293b; font-size: 0.9rem; }
+        .anomaly-table tr:nth-child(even) { background: #1e293b40; }
+        .bar-inline { display: inline-block; height: 8px; border-radius: 4px; background: linear-gradient(90deg, #fbbf24, #f87171); vertical-align: middle; margin-left: 0.5rem; }
+        .missing-table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
+        .missing-table th { background: #1e293b; color: #38bdf8; text-align: left; padding: 0.8rem 1rem; font-size: 0.8rem; text-transform: uppercase; }
+        .missing-table td { padding: 0.7rem 1rem; border-bottom: 1px solid #1e293b; font-size: 0.9rem; }
+        .unit-changes { margin-top: 1rem; }
+        .unit-item { background: #1e293b; border: 1px solid #334155; border-radius: 8px; padding: 0.8rem 1.2rem; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 1rem; font-size: 0.85rem; }
+        .unit-arrow { color: #fbbf24; font-weight: 700; flex-shrink: 0; }
+        .tech-stack { display: flex; gap: 0.8rem; margin-top: 1rem; flex-wrap: wrap; }
+        .tech { background: #fbbf2410; border: 1px solid #fbbf2430; padding: 0.4rem 1rem; border-radius: 8px; font-size: 0.85rem; color: #fbbf24; font-weight: 500; }
+        .footer { text-align: center; padding: 2rem; color: #475569; font-size: 0.85rem; border-top: 1px solid #1e293b; margin-top: 2rem; }
+        .footer a { color: #fbbf24; text-decoration: none; }
+        @media (max-width: 600px) { .hero h1 { font-size: 1.6rem; } .pipeline-flow { flex-direction: column; } .flow-step::after { display: none; } }
+    </style>
+</head>
+<body>
+    <div class="hero">
+        <h1>Industrial Sensor Data Cleaning Pipeline</h1>
+        <p class="subtitle">Cleans 2M+ rows of household electric power consumption data with missing value interpolation, dual-method anomaly detection, and unit standardization.</p>
+        <div class="domain-tag">Power Systems Domain</div>
+    </div>
+
+    <div class="container">
+        <div class="stats-grid">
+            <div class="stat-card"><div class="number blue">2,075,259</div><div class="label">Rows Processed</div></div>
+            <div class="stat-card"><div class="number amber">181,853</div><div class="label">Missing Values Handled</div></div>
+            <div class="stat-card"><div class="number red">512,925</div><div class="label">Anomalies Flagged</div></div>
+            <div class="stat-card"><div class="number green">4</div><div class="label">Visualizations</div></div>
+            <div class="stat-card"><div class="number purple">EU 230V</div><div class="label">Voltage Standard Detected</div></div>
+        </div>
+
+        <div class="section">
+            <h2>Pipeline Flow</h2>
+            <div class="pipeline-flow">
+                <div class="flow-step">
+                    <div class="icon">&#128196;</div>
+                    <h3>Load &amp; Parse</h3>
+                    <p>Semicolon-delimited, mixed formats, ? as NA</p>
+                </div>
+                <div class="flow-step">
+                    <div class="icon">&#128295;</div>
+                    <h3>Missing Values</h3>
+                    <p>Interpolation, forward/back fill, flagging</p>
+                </div>
+                <div class="flow-step">
+                    <div class="icon">&#9889;</div>
+                    <h3>Unit Standardization</h3>
+                    <p>kW, V, A, Wh + derived columns</p>
+                </div>
+                <div class="flow-step">
+                    <div class="icon">&#128270;</div>
+                    <h3>Anomaly Detection</h3>
+                    <p>IQR + Rolling Z-Score (dual method)</p>
+                </div>
+                <div class="flow-step">
+                    <div class="icon">&#128200;</div>
+                    <h3>Visualize</h3>
+                    <p>Distributions, time series, heatmaps</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Unit Standardization</h2>
+            <div class="unit-changes">
+                <div class="unit-item"><span class="unit-arrow">&#8594;</span> Global_active_power &rarr; <strong>active_power_kw</strong> (kW)</div>
+                <div class="unit-item"><span class="unit-arrow">&#8594;</span> Global_reactive_power &rarr; <strong>reactive_power_kvar</strong> (kVAR)</div>
+                <div class="unit-item"><span class="unit-arrow">&#8594;</span> Voltage &rarr; <strong>voltage_v</strong> (V)</div>
+                <div class="unit-item"><span class="unit-arrow">&#8594;</span> Global_intensity &rarr; <strong>current_a</strong> (A)</div>
+                <div class="unit-item"><span class="unit-arrow">&#8594;</span> Sub_metering_1/2/3 &rarr; <strong>sub_meter_1/2/3_wh</strong> (Wh)</div>
+                <div class="unit-item"><span class="unit-arrow">+</span> Derived: <strong>active_power_w</strong> = active_power_kw &times; 1000</div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Missing Value Treatment</h2>
+            <table class="missing-table">
+                <thead><tr><th>Column</th><th>Missing</th><th>% Missing</th><th>Method</th><th>Remaining</th></tr></thead>
+                <tbody>
+                    <tr><td>active_power_kw</td><td>25,979</td><td>1.25%</td><td>Linear interpolation</td><td>25,747</td></tr>
+                    <tr><td>reactive_power_kvar</td><td>25,979</td><td>1.25%</td><td>Linear interpolation</td><td>25,747</td></tr>
+                    <tr><td>voltage_v</td><td>25,979</td><td>1.25%</td><td>Linear interpolation</td><td>25,747</td></tr>
+                    <tr><td>current_a</td><td>25,979</td><td>1.25%</td><td>Linear interpolation</td><td>25,747</td></tr>
+                    <tr><td>sub_meter_1_wh</td><td>25,979</td><td>1.25%</td><td>Linear interpolation</td><td>25,747</td></tr>
+                    <tr><td>sub_meter_2_wh</td><td>25,979</td><td>1.25%</td><td>Linear interpolation</td><td>25,747</td></tr>
+                    <tr><td>sub_meter_3_wh</td><td>25,979</td><td>1.25%</td><td>Linear interpolation</td><td>25,747</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="section">
+            <h2>Anomaly Detection Results</h2>
+            <table class="anomaly-table">
+                <thead><tr><th>Measurement</th><th>IQR Anomalies</th><th>Rolling Z-Score</th><th>Total</th><th>%</th></tr></thead>
+                <tbody>
+                    <tr><td>active_power_kw</td><td>14,306</td><td>75,698</td><td>87,289</td><td>4.21% <span class="bar-inline" style="width:42px"></span></td></tr>
+                    <tr><td>reactive_power_kvar</td><td>3,886</td><td>20,440</td><td>22,982</td><td>1.11% <span class="bar-inline" style="width:11px"></span></td></tr>
+                    <tr><td>voltage_v</td><td>810</td><td>22,838</td><td>23,565</td><td>1.14% <span class="bar-inline" style="width:11px"></span></td></tr>
+                    <tr><td>current_a</td><td>16,523</td><td>74,582</td><td>87,796</td><td>4.23% <span class="bar-inline" style="width:42px"></span></td></tr>
+                    <tr><td>sub_meter_2_wh</td><td>64,414</td><td>76,247</td><td>130,758</td><td>6.30% <span class="bar-inline" style="width:63px"></span></td></tr>
+                    <tr><td>sub_meter_3_wh</td><td>0</td><td>73,246</td><td>73,246</td><td>3.53% <span class="bar-inline" style="width:35px"></span></td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="viz-section">
+            <div class="section"><h2>Visualizations</h2></div>
+
+            <div class="viz-card">
+                <div class="viz-header">
+                    <h3>Time Series with Anomaly Detection</h3>
+                    <p>Red dots indicate anomalies detected by IQR or rolling z-score methods. Shows active power, reactive power, and voltage over 4 years.</p>
+                </div>
+                <img src="timeseries_anomalies.png" alt="Time series with anomaly markers">
+            </div>
+
+            <div class="viz-card">
+                <div class="viz-header">
+                    <h3>Data Distributions</h3>
+                    <p>Histograms and box plots showing the distribution of key power measurements after cleaning.</p>
+                </div>
+                <img src="distributions.png" alt="Distribution plots">
+            </div>
+
+            <div class="viz-card">
+                <div class="viz-header">
+                    <h3>Anomaly Detection by Method</h3>
+                    <p>Comparison of IQR vs rolling z-score detection across all measurement columns.</p>
+                </div>
+                <img src="anomaly_summary.png" alt="Anomaly summary bar chart">
+            </div>
+
+            <div class="viz-card">
+                <div class="viz-header">
+                    <h3>Missing Data Heatmap</h3>
+                    <p>Daily missing data patterns across all sensor columns over the full date range.</p>
+                </div>
+                <img src="missing_data_heatmap.png" alt="Missing data heatmap">
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Tech Stack</h2>
+            <div class="tech-stack">
+                <span class="tech">Python</span>
+                <span class="tech">pandas</span>
+                <span class="tech">NumPy</span>
+                <span class="tech">matplotlib</span>
+                <span class="tech">seaborn</span>
+                <span class="tech">scikit-learn</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="footer">
+        <a href="https://github.com/rpatel0022/sensor-data-cleaning-pipeline">View Source on GitHub</a>
+    </div>
+</body>
+</html>
