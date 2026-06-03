@@ -1,0 +1,141 @@
+{
+  "rows": 2075259,
+  "date_range": [
+    "2006-12-16 17:24:00",
+    "2010-11-26 21:02:00"
+  ],
+  "missing_values": {
+    "Global_active_power": {
+      "count": 25979,
+      "pct": 1.25,
+      "method": "linear_interpolation",
+      "remaining_nulls": 25747
+    },
+    "Global_reactive_power": {
+      "count": 25979,
+      "pct": 1.25,
+      "method": "linear_interpolation",
+      "remaining_nulls": 25747
+    },
+    "Voltage": {
+      "count": 25979,
+      "pct": 1.25,
+      "method": "linear_interpolation",
+      "remaining_nulls": 25747
+    },
+    "Global_intensity": {
+      "count": 25979,
+      "pct": 1.25,
+      "method": "linear_interpolation",
+      "remaining_nulls": 25747
+    },
+    "Sub_metering_1": {
+      "count": 25979,
+      "pct": 1.25,
+      "method": "linear_interpolation",
+      "remaining_nulls": 25747
+    },
+    "Sub_metering_2": {
+      "count": 25979,
+      "pct": 1.25,
+      "method": "linear_interpolation",
+      "remaining_nulls": 25747
+    },
+    "Sub_metering_3": {
+      "count": 25979,
+      "pct": 1.25,
+      "method": "linear_interpolation",
+      "remaining_nulls": 25747
+    }
+  },
+  "unit_changes": [
+    "Global_active_power -> active_power_kw (kW)",
+    "Global_reactive_power -> reactive_power_kvar (kVAR)",
+    "Voltage -> voltage_v (V)",
+    "Global_intensity -> current_a (A)",
+    "Sub_metering_1 -> sub_meter_1_wh (Wh)",
+    "Sub_metering_2 -> sub_meter_2_wh (Wh)",
+    "Sub_metering_3 -> sub_meter_3_wh (Wh)",
+    "Added active_power_w (kW * 1000)",
+    "Detected voltage standard: EU 230V"
+  ],
+  "anomaly_detection": {
+    "active_power_kw": {
+      "iqr_anomalies": 14379,
+      "rolling_z_anomalies": 75870,
+      "total_anomalies": 87289,
+      "pct": 4.206,
+      "bounds": {
+        "lower": -3.352,
+        "upper": 5.188
+      }
+    },
+    "reactive_power_kvar": {
+      "iqr_anomalies": 3908,
+      "rolling_z_anomalies": 20410,
+      "total_anomalies": 22982,
+      "pct": 1.107,
+      "bounds": {
+        "lower": -0.39,
+        "upper": 0.632
+      }
+    },
+    "voltage_v": {
+      "iqr_anomalies": 898,
+      "rolling_z_anomalies": 22712,
+      "total_anomalies": 23565,
+      "pct": 1.136,
+      "bounds": {
+        "lower": 227.29,
+        "upper": 254.59
+      }
+    },
+    "current_a": {
+      "iqr_anomalies": 16469,
+      "rolling_z_anomalies": 74690,
+      "total_anomalies": 87796,
+      "pct": 4.231,
+      "bounds": {
+        "lower": -13.6,
+        "upper": 21.4
+      }
+    },
+    "sub_meter_2_wh": {
+      "iqr_anomalies": 64237,
+      "rolling_z_anomalies": 76415,
+      "total_anomalies": 130758,
+      "pct": 6.301,
+      "bounds": {
+        "lower": -3.0,
+        "upper": 4.0
+      }
+    },
+    "sub_meter_3_wh": {
+      "iqr_anomalies": 0,
+      "rolling_z_anomalies": 73246,
+      "total_anomalies": 73246,
+      "pct": 3.529,
+      "bounds": {
+        "lower": -51.0,
+        "upper": 68.0
+      }
+    },
+    "active_power_w": {
+      "iqr_anomalies": 14379,
+      "rolling_z_anomalies": 75870,
+      "total_anomalies": 87289,
+      "pct": 4.206,
+      "bounds": {
+        "lower": -3352.0,
+        "upper": 5188.0
+      }
+    }
+  },
+  "summary": {
+    "nulls_before": 181853,
+    "nulls_after": 180229,
+    "null_reduction_pct": 0.9,
+    "total_anomalies": 512925,
+    "plots_generated": 4
+  }
+}
